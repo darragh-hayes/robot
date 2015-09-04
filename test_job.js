@@ -45,4 +45,6 @@ mqtt.on('connect', function() {
 
 mqtt.on('message', function(topic, message) {
 	console.log('received message', message.toString());
+
+	message = JSON.parse(message.toString());
 })

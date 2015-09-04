@@ -31,7 +31,11 @@ board.on('ready', function () {
   var light = new five.Pin('GPIO7')
 
   button.on('down', function () {
-    console.log('DOWN!')
+    console.log('DOWN!');
+    if (machines.every(function(machine) { return machine.ready })) {
+        console.log('machines ready to take jobs');
+        mqtt.publish(worker, JSON.stringify({worker: worker, status: 'ready'}));
+    }
   })
 
   light.high()
