@@ -31,7 +31,7 @@ var defs = {
 var jobs = [{
         id: 0,
         name: 'Matteo',
-        cocktail: 'spritz',
+        cocktail: 'bloody',
         pump: 1,
         activations: defs.cocktails.spritz.activations
       }]

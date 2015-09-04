@@ -105,30 +105,24 @@ function initMachines() {
 
       parallel(null,
 
-        function(port, callback) {
+        function(port, finished) {
           var pin = machine.pins[port];
           pin.high();
-          portNum++;
 
           setTimeout(function() {
             pin.low();
             machine.ready = true;
-            callback();
+            finished();
           }, job.activations[portNum]);
 
+          portNum++;
         },
         machine.ports,
-        cb
+        function done() {
+          machine.ready = true;
+          cb();
+        }
       );
-      /*machine.ports.forEach(function(port, index) {
-        var pin = machine.pins[port];
-        pin.high();
-
-        setTimeout(function() {
-          pin.low();
-          this.ready = true;
-        }, job.activations[index])
-      })*/
     }
   });
 }
