@@ -11,6 +11,7 @@
   "dependencies": {
     "mqtt": "^1.3.5",
     "johnny-five": "^0.8.89",
-    "raspi-io": "^3.3.5"
+    "raspi-io": "^3.3.5",
+    "fastparallel": "^1.6.1"
   }
 }

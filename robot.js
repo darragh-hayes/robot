@@ -1,10 +1,9 @@
-var Raspi = require('raspi-io')
-var five = require('johnny-five')
-var raspi = new Raspi()
-var board = new five.Board({
-  io: raspi
-})
-var worker = 'pi1'
+var Raspi = require('raspi-io');
+var five = require('johnny-five');
+var parallel = require('fastparallel');
+var raspi = new Raspi();
+var board = new five.Board({ io: raspi });
+var worker = 'pi1';
 var mqtt;
 
 var machines = [
@@ -28,14 +27,12 @@ board.on('ready', function () {
   initMachines();
   mqtt.subscribe('pi1');
 
-  var pin = 'GPIO4'
-  var button = new five.Button(pin);
+  var button = new five.Button('GPIO4');
+  var light = new five.Pin('GPIO7')
 
   button.on('down', function () {
     console.log('DOWN!')
   })
-
-  var light = new five.Pin('GPIO7')
 
   light.high()
 
@@ -60,9 +57,14 @@ board.on('ready', function () {
       console.log('received jobs' + JSON.stringify(message.jobs, null, 2));
       //if both machines are ready to accept jobs
       if (machines.every(function(machine) { return machine.ready })) {
-        message.jobs.forEach(function(job) {
-          machines[job.pump].runJob(job)
-        });
+        
+        parallel(null, function(job, cb) {
+          machine[job.pump].runJob(job, cb);
+        },
+        message.jobs, 
+        function done() {
+          console.log('Finished Jobs');
+        })
       }
     }
   });
@@ -92,14 +94,29 @@ function initMachines() {
       })
     }
 
-    machine.runJob = function(job) {
+    machine.runJob = function(job, cb) {
       var machine = this;
       this.ready = false;
       console.log('running job on machine', machine.id)
       mqtt.publish(worker, JSON.stringify({status: 'running job on machine ' + machine.id}));
       
+      parallel(null,
 
-      machine.ports.forEach(function(port, index) {
+        function(port, callback) {
+          var pin = machine.pins[port];
+          pin.high();
+
+          setTimeout(function() {
+            pin.low();
+            this.ready = true;
+            callback();
+          }, job.activations[index]);
+
+        },
+        machine.ports,
+        cb
+      );
+      /*machine.ports.forEach(function(port, index) {
         var pin = machine.pins[port];
         pin.high();
 
@@ -107,7 +124,7 @@ function initMachines() {
           pin.low();
           this.ready = true;
         }, job.activations[index])
-      })
+      })*/
     }
-  })
+  });
 }
