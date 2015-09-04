@@ -1,6 +1,6 @@
 var Raspi = require('raspi-io');
 var five = require('johnny-five');
-var parallel = require('fastparallel');
+var parallel = require('fastparallel')();
 var raspi = new Raspi();
 var board = new five.Board({ io: raspi });
 var worker = 'pi1';
@@ -57,7 +57,8 @@ board.on('ready', function () {
       console.log('received jobs' + JSON.stringify(message.jobs, null, 2));
       //if both machines are ready to accept jobs
       if (machines.every(function(machine) { return machine.ready })) {
-        
+        console.log('machines ready to take jobs');
+
         parallel(null, function(job, cb) {
           machine[job.pump].runJob(job, cb);
         },
