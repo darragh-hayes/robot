@@ -6,6 +6,8 @@ var board = new five.Board({ io: raspi });
 var worker = 'pi1';
 var mqtt;
 
+var ready = true;
+
 var machines = [
   {
     id: 1,
@@ -32,7 +34,7 @@ board.on('ready', function () {
 
   button.on('down', function () {
     console.log('DOWN!');
-    if (machines.every(function(machine) { return machine.ready })) {
+    if (ready) {
         console.log('machines ready to take jobs');
         mqtt.publish(worker, JSON.stringify({worker: worker, status: 'ready'}));
     }
@@ -60,14 +62,15 @@ board.on('ready', function () {
     if (message.jobs) {
       console.log('received jobs' + JSON.stringify(message.jobs, null, 2));
       //if both machines are ready to accept jobs
-      if (machines.every(function(machine) { return machine.ready })) {
-        console.log('machines ready to take jobs');
+      if (ready) {
+        ready = false;
 
         parallel(null, function(job, cb) {
           machines[job.pump].runJob(job, cb);
         },
         message.jobs, 
         function done() {
+          ready = true;
           console.log('Finished Jobs');
         })
       }
@@ -115,7 +118,6 @@ function initMachines() {
 
           setTimeout(function() {
             pin.low();
-            machine.ready = true;
             finished();
           }, job.activations[portNum]);
 
