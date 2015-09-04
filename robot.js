@@ -30,7 +30,8 @@ board.on('ready', function () {
   ping();
 
   var button = new five.Button('GPIO4');
-  var light = new five.Led('GPIO8');
+  var light = new five.Led('GPIO7');
+  light.blink()
 
   button.on('down', function () {
     console.log('button pressed');
