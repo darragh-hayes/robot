@@ -30,7 +30,7 @@ board.on('ready', function () {
   ping();
 
   var button = new five.Button('GPIO4');
-  var light = new five.Led('GPIO7');
+  var light = new five.Led('GPIO8');
 
   button.on('down', function () {
     console.log('button pressed');
@@ -53,7 +53,7 @@ board.on('ready', function () {
 
     if (message.status === 'ping') { ping(); }
     
-    if (message.status === 'new jobs' && message.jobs) {
+    if (message.jobs) {
       console.log('received jobs' + JSON.stringify(message.jobs, null, 2));
       if (ready) {
         ready = false;

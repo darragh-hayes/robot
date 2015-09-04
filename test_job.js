@@ -54,7 +54,7 @@ mqtt.on('message', function(topic, message) {
 	console.log('received message', message.toString());
 
 	message = JSON.parse(message.toString());
-	if (message.status === 'ready') {
-		mqtt.publish('pi1', JSON.stringify({jobs: jobs}));
+	if (message.status === 'button pressed') {
+		mqtt.publish('pi1', JSON.stringify({status: 'new jobs', jobs: jobs}));
 	}
 })
