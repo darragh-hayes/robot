@@ -30,7 +30,7 @@ board.on('ready', function () {
   var button = new five.Button('GPIO4');
   var light = new five.Led('GPIO7');
 
-  light.blink();
+  light.pulse();
 
   button.on('down', function () {
     console.log('DOWN!');
@@ -59,14 +59,18 @@ board.on('ready', function () {
       //if both machines are ready to accept jobs
       if (ready) {
         ready = false;
-
+        light.on();
         parallel(null, function(job, cb) {
           machines[job.pump].runJob(job, cb);
         },
         message.jobs, 
         function done() {
+          light.blink();
           ready = true;
           console.log('Finished Jobs');
+          setTimeout(function() {
+            light.stop();
+          }, 10000);
         })
       }
     }
@@ -120,7 +124,7 @@ function initMachines() {
         },
         machine.ports,
         function done() {
-          machine.ready = true;
+          //send glen a message saying drink tasty
           cb();
         }
       );
