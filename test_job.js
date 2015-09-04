@@ -3,9 +3,9 @@ var mqtt = require('mqtt').connect('mqtt://localhost:2048');
 var cocktails = {
   bloody: {
     activations: [
-      2000, // milleseconds
-      1000,
-      3000
+      5000, // milleseconds
+      10000,
+      15000
     ]
   },
   spritz: {
@@ -34,12 +34,6 @@ var jobs = [{
         cocktail: 'spritz',
         pump: 1,
         activations: defs.cocktails.spritz.activations
-      }, {
-        id: 3,
-        name: 'David',
-        cocktail: 'bloody',
-        pump: 0,
-        activations: defs.cocktails.bloody.activations
       }]
 
 
