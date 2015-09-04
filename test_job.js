@@ -40,14 +40,14 @@ var jobs = [{
 mqtt.on('connect', function() {
 	mqtt.subscribe('pi1');
 	//mqtt.publish('pi1', JSON.stringify({jobs: jobs}));
-	console.log('pushed messaged');
+	//console.log('pushed messaged');
 })
 
 mqtt.on('message', function(topic, message) {
 	console.log('received message', message.toString());
 
 	message = JSON.parse(message.toString());
-	if (message.status = 'ready') {
+	if (message.status === 'ready') {
 		mqtt.publish('pi1', JSON.stringify({jobs: jobs}));
 	}
 })
