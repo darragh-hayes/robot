@@ -12,13 +12,11 @@ var machines = [
   {
     id: 1,
     ports: ['GPIO24', 'GPIO9', 'GPIO18'],
-    ready: true,
     pins: {}
   },
   {
     id: 2,
     ports : ['GPIO22', 'GPIO23', 'GPIO27'],
-    ready: true,
     pins: {}
   }
 ];
@@ -30,22 +28,19 @@ board.on('ready', function () {
   mqtt.subscribe('pi1');
 
   var button = new five.Button('GPIO4');
-  var light = new five.Pin('GPIO7')
+  var light = new five.Led('GPIO7');
+
+  light.blink();
 
   button.on('down', function () {
     console.log('DOWN!');
     if (ready) {
         console.log('machines ready to take jobs');
         mqtt.publish(worker, JSON.stringify({worker: worker, status: 'ready'}));
+    } else {
+      console.log('not taking jobs');
     }
   })
-
-  light.high()
-
-  setTimeout(function () {
-    light.low()
-  }, 5000)
-
 
   this.repl.inject({
     machines: machines,
