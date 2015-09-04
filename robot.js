@@ -101,20 +101,20 @@ function initMachines() {
       console.log('running job on machine', machine.id)
       mqtt.publish(worker, JSON.stringify({status: 'running job on machine ' + machine.id}));
       
-      var port = 0;
+      var portNum = 0;
 
       parallel(null,
 
         function(port, callback) {
           var pin = machine.pins[port];
           pin.high();
-          port++;
+          portNum++;
 
           setTimeout(function() {
             pin.low();
             machine.ready = true;
             callback();
-          }, job.activations[port]);
+          }, job.activations[portNum]);
 
         },
         machine.ports,
