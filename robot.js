@@ -60,7 +60,7 @@ board.on('ready', function () {
         console.log('machines ready to take jobs');
 
         parallel(null, function(job, cb) {
-          machine[job.pump].runJob(job, cb);
+          machines[job.pump].runJob(job, cb);
         },
         message.jobs, 
         function done() {
