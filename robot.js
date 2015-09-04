@@ -1,9 +1,10 @@
+var config = require('./config.js');
 var Raspi = require('raspi-io');
 var five = require('johnny-five');
 var parallel = require('fastparallel')();
 var raspi = new Raspi();
 var board = new five.Board({ io: raspi });
-var worker = 'pi1';
+var worker = config.worker;
 var mqtt;
 
 var ready = true;
@@ -23,20 +24,21 @@ var machines = [
 
 board.on('ready', function () {
 
-  mqtt = require('mqtt').connect('mqtt://192.168.1.83:2048');
+  mqtt = require('mqtt').connect('mqtt://'+config.host+':'+config.port);
   initMachines();
-  mqtt.subscribe('pi1');
+  mqtt.subscribe(worker);
+  ping();
 
   var button = new five.Button('GPIO4');
   var light = new five.Led('GPIO7');
 
   button.on('down', function () {
-    console.log('DOWN!');
+    console.log('button pressed');
     if (ready) {
         console.log('machines ready to take jobs');
-        mqtt.publish(worker, JSON.stringify({worker: worker, status: 'ready'}));
+        mqtt.publish(worker, JSON.stringify({worker: worker, status: 'button pressed'}));
     } else {
-      console.log('not taking jobs');
+      console.log('Can\'t you see I\'m busy?');
     }
   })
 
@@ -45,19 +47,17 @@ board.on('ready', function () {
     button: button
   });
 
-
-
-  mqtt.publish(worker, JSON.stringify({worker: worker, status: 'ready'}));
-
   mqtt.on('message', function(topic, message) {
     console.log(message.toString());
     message = JSON.parse(message.toString());
-    if (message.jobs) {
+
+    if (message.status === 'ping') { ping(); }
+    
+    if (message.status === 'new jobs' && message.jobs) {
       console.log('received jobs' + JSON.stringify(message.jobs, null, 2));
-      //if both machines are ready to accept jobs
       if (ready) {
         ready = false;
-        light.stop.().on();
+        light.stop().on();
         parallel(null, function(job, cb) {
           machines[job.pump].runJob(job, cb);
         },
@@ -66,10 +66,15 @@ board.on('ready', function () {
           light.blink();
           ready = true;
           console.log('Finished Jobs');
+          ping();
         })
       }
     }
   });
+
+  function ping() {
+      mqtt.publish('connections', JSON.stringify({worker: worker, status: 'worker here', ready: ready}));
+  }
 })
 
 function initMachines() {
@@ -113,13 +118,15 @@ function initMachines() {
           setTimeout(function() {
             pin.low();
             finished();
-          }, job.activations[portNum]);
+          }, job.activations[portNum].time);
 
           portNum++;
         },
         machine.ports,
         function done() {
           //send glen a message saying drink tasty
+          job.finished = true;
+          mqtt.publish(worker, JSON.stringify({status: 'mix ready', job: job}));
           cb();
         }
       );
