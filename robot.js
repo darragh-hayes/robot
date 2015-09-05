@@ -5,78 +5,41 @@ var parallel = require('fastparallel')();
 var raspi = new Raspi();
 var board = new five.Board({ io: raspi });
 var worker = config.worker;
-var mqtt;
-
+var mqtt, button, light;
 var ready = true;
-
-var machines = [
-  {
-    id: 1,
-    ports: ['GPIO24', 'GPIO9', 'GPIO18'],
-    pins: {}
-  },
-  {
-    id: 2,
-    ports : ['GPIO22', 'GPIO23', 'GPIO27'],
-    pins: {}
-  }
-];
+var machines = config.machines;
 
 board.on('ready', function () {
 
-  mqtt = require('mqtt').connect('mqtt://'+config.host+':'+config.port);
   initMachines();
+  button = five.Button(config.buttonPin);
+  light = five.Led(config.lightPin);
+  light.blink();
+  mqtt = require('mqtt').connect('mqtt://'+config.host+':'+config.port);
   mqtt.subscribe(worker);
   ping();
-
-  var button = new five.Button('GPIO4');
-  var light = new five.Led('GPIO7');
-  light.blink()
-
-  button.on('down', function () {
-    console.log('button pressed');
-    if (ready) {
-        console.log('machines ready to take jobs');
-        mqtt.publish(worker, JSON.stringify({worker: worker, status: 'button pressed'}));
-    } else {
-      console.log('Can\'t you see I\'m busy?');
-    }
-  })
-
-  this.repl.inject({
-    machines: machines,
-    button: button
-  });
 
   mqtt.on('message', function(topic, message) {
     console.log(message.toString());
     message = JSON.parse(message.toString());
 
     if (message.status === 'ping') { ping(); }
-    
-    if (message.jobs) {
-      console.log('received jobs' + JSON.stringify(message.jobs, null, 2));
-      if (ready) {
-        ready = false;
-        light.stop().on();
-        parallel(null, function(job, cb) {
-          machines[job.pump].runJob(job, cb);
-        },
-        message.jobs, 
-        function done() {
-          light.blink();
-          ready = true;
-          console.log('Finished Jobs');
-          ping();
-        })
-      }
+    else if (message.jobs) { handleJobs(message); }
+    else if (message.status === 'stop now') { stop(); }
+  });
+
+  button.on('down', function () {
+    console.log('button pressed');
+    if (ready) {
+      mqtt.publish(worker, JSON.stringify({worker: worker, status: 'button pressed'}));
     }
   });
 
-  function ping() {
-      mqtt.publish('connections', JSON.stringify({worker: worker, status: 'worker here', ready: ready}));
-  }
-})
+  this.repl.inject({
+    machines: machines,
+    kill: kill
+  });
+});
 
 function initMachines() {
   machines.forEach(function(machine) {
@@ -84,13 +47,14 @@ function initMachines() {
       var pin = new five.Pin(port)
       acc[port] = pin
       return acc
-    }, {})
+    }, {});
 
-    machine.reset = function () {
+    machine.kill = function () {
       var machine = this;
       this.ports.forEach(function (port) {
         var pin = machine.pins[port];
-        pin.low()
+        pin.high();
+        pin.low();
       })
     }
   
@@ -98,7 +62,7 @@ function initMachines() {
       var machine = this;
       this.ports.forEach(function (port) {
         var pin = machine.pins[port]
-        pin.high()
+        pin.high();
       })
     }
 
@@ -127,10 +91,42 @@ function initMachines() {
         function done() {
           //send glen a message saying drink tasty
           job.finished = true;
-          mqtt.publish(worker, JSON.stringify({status: 'mix ready', job: job}));
+          mqtt.publish(worker, JSON.stringify({status: 'job complete', job: job}))
           cb();
         }
       );
     }
   });
+}
+
+function kill() {
+  machines.forEach(function(m) {
+    console.log('killed machines');
+    m.reset();
+    ready = true;
+    light.blink();
+    ping();
+  });
+}
+
+function handleJobs(message) {
+  console.log('received jobs' + JSON.stringify(message.jobs, null, 2));
+  if (ready) {
+    ready = false;
+    light.stop().on();
+    parallel(null, function(job, cb) {
+      machines[job.pump].runJob(job, cb);
+    },
+    message.jobs, 
+    function done() {
+      light.blink();
+      ready = true;
+      console.log('Finished Jobs');
+      ping();
+    })
+  }
+}
+
+function ping() {
+  mqtt.publish('connections', JSON.stringify({worker: worker, status: 'worker here', ready: ready}));
 }
