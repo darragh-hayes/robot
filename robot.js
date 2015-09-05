@@ -104,7 +104,9 @@ function reset() {
   });
   ready = true;
   light.blink();
-  ping();
+  if (mqtt) {
+    ping();
+  }
 }
 
 function handleJobs(message) {
