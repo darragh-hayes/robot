@@ -102,7 +102,7 @@ function initMachines() {
 function kill() {
   machines.forEach(function(m) {
     console.log('killed machines');
-    m.reset();
+    m.kill();
     ready = true;
     light.blink();
     ping();
