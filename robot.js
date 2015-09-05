@@ -10,7 +10,7 @@ var ready = true;
 var machines = config.machines;
 
 board.on('ready', function () {
-
+  kill();
   initMachines();
   button = five.Button(config.buttonPin);
   light = five.Led(config.lightPin);
@@ -101,12 +101,11 @@ function initMachines() {
 
 function kill() {
   machines.forEach(function(m) {
-    console.log('killed machines');
     m.kill();
-    ready = true;
-    light.blink();
-    ping();
   });
+  ready = true;
+  light.blink();
+  ping();
 }
 
 function handleJobs(message) {
@@ -130,3 +129,13 @@ function handleJobs(message) {
 function ping() {
   mqtt.publish('connections', JSON.stringify({worker: worker, status: 'worker here', ready: ready}));
 }
+
+var signals = ['SIGKILL', 'SIGTERM', 'SIGHUP'];
+
+signals.forEach(function(s) {
+  process.on(s, function() {
+    kill();
+    light.stop().off();
+  });
+});
+
