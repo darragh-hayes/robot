@@ -11,10 +11,9 @@ var machines = config.machines;
 
 board.on('ready', function () {
   initMachines();
-  kill();
   button = five.Button(config.buttonPin);
   light = five.Led(config.lightPin);
-  light.blink();
+  reset();
   mqtt = require('mqtt').connect('mqtt://'+config.host+':'+config.port);
   mqtt.subscribe(worker);
   ping();
@@ -37,7 +36,7 @@ board.on('ready', function () {
 
   this.repl.inject({
     machines: machines,
-    kill: kill
+    reset: reset
   });
 });
 
@@ -49,7 +48,7 @@ function initMachines() {
       return acc
     }, {});
 
-    machine.kill = function () {
+    machine.reset = function () {
       var machine = this;
       this.ports.forEach(function (port) {
         var pin = machine.pins[port];
@@ -99,9 +98,9 @@ function initMachines() {
   });
 }
 
-function kill() {
+function reset() {
   machines.forEach(function(m) {
-    m.kill();
+    m.reset();
   });
   ready = true;
   light.blink();
@@ -134,7 +133,7 @@ var signals = ['SIGINT', 'SIGTERM', 'SIGHUP'];
 
 signals.forEach(function(s) {
   process.on(s, function() {
-    kill();
+    reset();
     light.stop().off();
   });
 });
