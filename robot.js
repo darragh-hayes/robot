@@ -43,7 +43,10 @@ board.on('ready', function () {
 function initMachines() {
   machines.forEach(function(machine) {
     machine.pins = machine.ports.reduce(function (acc, port) {
-      var pin = new five.Pin(port)
+      var pin = new five.Relay({
+                        type: "NO",
+                        pin: port
+                    });
       acc[port] = pin
       return acc
     }, {});
@@ -52,16 +55,16 @@ function initMachines() {
       var machine = this;
       this.ports.forEach(function (port) {
         var pin = machine.pins[port];
-        pin.high();
-        pin.low();
+        pin.on();
+        pin.off();
       })
     }
-  
+
     machine.start = function () {
       var machine = this;
       this.ports.forEach(function (port) {
         var pin = machine.pins[port]
-        pin.high();
+        pin.on();
       })
     }
 
@@ -70,17 +73,17 @@ function initMachines() {
       this.ready = false;
       console.log('running job on machine', machine.id)
       mqtt.publish(worker, JSON.stringify({status: 'running job on machine ' + machine.id}));
-      
+
       var portNum = 0;
 
       parallel(null,
 
         function(port, finished) {
           var pin = machine.pins[port];
-          pin.high();
+          pin.on();
 
           setTimeout(function() {
-            pin.low();
+            pin.off();
             finished();
           }, job.activations[portNum].time);
 
@@ -117,7 +120,7 @@ function handleJobs(message) {
     parallel(null, function(job, cb) {
       machines[job.pump].runJob(job, cb);
     },
-    message.jobs, 
+    message.jobs,
     function done() {
       light.blink();
       ready = true;
@@ -139,4 +142,3 @@ signals.forEach(function(s) {
     light.stop().off();
   });
 });
-
