@@ -113,7 +113,7 @@ function handleJobs(message) {
   console.log('received jobs' + JSON.stringify(message.jobs, null, 2));
   if (ready) {
     ready = false;
-    light.stop().on();
+    light.stop().off();
     parallel(null, function(job, cb) {
       machines[job.pump].runJob(job, cb);
     },
