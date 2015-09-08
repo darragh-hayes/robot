@@ -112,6 +112,13 @@ function reset() {
   }
 }
 
+function start() {
+  machines.forEach(function(m) {
+    m.start();
+  });
+  ready = false;
+}
+
 function handleJobs(message) {
   console.log('received jobs' + JSON.stringify(message.jobs, null, 2));
   if (ready) {
