@@ -43,9 +43,9 @@ board.on('ready', function () {
 function initMachines() {
   machines.forEach(function(machine) {
     machine.pins = machine.ports.reduce(function (acc, port) {
-      var pin = new five.Pin(port)
-      acc[port] = pin
-      return acc
+      var pin = new five.Pin(port);
+      acc[port] = pin;
+      return acc;
     }, {});
 
     machine.reset = function () {
@@ -54,21 +54,21 @@ function initMachines() {
         var pin = machine.pins[port];
         pin.high();
         pin.low();
-      })
+      });
     }
   
     machine.start = function () {
       var machine = this;
       this.ports.forEach(function (port) {
-        var pin = machine.pins[port]
+        var pin = machine.pins[port];
         pin.high();
-      })
-    }
+      });
+    };
 
     machine.runJob = function(job, cb) {
       var machine = this;
       this.ready = false;
-      console.log('running job on machine', machine.id)
+      console.log('running job on machine', machine.id);
       mqtt.publish(worker, JSON.stringify({status: 'running job on machine ' + machine.id}));
       
       var portNum = 0;
@@ -90,11 +90,11 @@ function initMachines() {
         function done() {
           //send glen a message saying drink tasty
           job.finished = true;
-          mqtt.publish(worker, JSON.stringify({status: 'job complete', job: job}))
+          mqtt.publish(worker, JSON.stringify({status: 'job complete', job: job}));
           cb();
         }
       );
-    }
+    };
   });
 }
 
@@ -123,7 +123,7 @@ function handleJobs(message) {
       ready = true;
       console.log('Finished Jobs');
       ping();
-    })
+    });
   }
 }
 
