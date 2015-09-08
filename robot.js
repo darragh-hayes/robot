@@ -88,7 +88,6 @@ function initMachines() {
         },
         machine.ports,
         function done() {
-          //send glen a message saying drink tasty
           job.finished = true;
           mqtt.publish(worker, JSON.stringify({status: 'job complete', job: job}));
           cb();

@@ -1,32 +1,34 @@
 var mqtt = require('mqtt').connect('mqtt://localhost:2048');
+var config = require('./config.js');
 
 var cocktails = {
   bloody: {
     activations: [
-      {time: 60000}, // milleseconds
-      {time: 30000},
-      {time: 60000}
+      {time: 5000}, // milliseconds
+      {time: 3000},
+      {time: 6000}
     ]
   },
   spritz: {
     activations: [
-      {time:4000}, // milleseconds
+      {time:4000},
       {time: 3000},
       {time: 4000}
     ]
   }
-}
+};
+
 var defs = {
   cocktails: cocktails,
   workers: {
     bob: {
-      cocktails: ['bloody', 'spritz']
+      cocktails: [{machine: 0, cocktail: 'bloody'}, {machine: 1, cocktail: 'spritz'}]
     },
     mark: {
-      cocktails: ['spritz', 'spritz']
+      cocktails: [{machine: 0, cocktail: 'spritz'}, {machine: 1, cocktail: 'spritz'}]
     }
   }
-}
+};
 
 var jobs = [{
         id: 0,
@@ -34,14 +36,12 @@ var jobs = [{
         cocktail: 'bloody',
         pump: 0,
         activations: defs.cocktails.bloody.activations
-      }]
+  }];
 
 
 mqtt.on('connect', function() {
-  mqtt.subscribe('pi1');
-  //mqtt.publish('pi1', JSON.stringify({jobs: jobs}));
-  //console.log('pushed messaged');
-})
+  mqtt.subscribe(config.worker);
+});
 
 mqtt.on('message', function(topic, message) {
   console.log('received message', message.toString());
@@ -50,4 +50,4 @@ mqtt.on('message', function(topic, message) {
   if (message.status === 'button pressed') {
     mqtt.publish('pi1', JSON.stringify({status: 'new jobs', jobs: jobs}));
   }
-})
+});
