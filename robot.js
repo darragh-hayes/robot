@@ -104,8 +104,17 @@ function reset() {
   ready = true;
   light.blink();
   if (mqtt) {
+    //we call reset as soon as the script starts
+    //before the mqtt conenction is established
     ping();
   }
+}
+
+function start() {
+  machines.forEach(function(m) {
+    m.start();
+  });
+  ready = false;
 }
 
 function handleJobs(message) {
