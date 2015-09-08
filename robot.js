@@ -36,7 +36,8 @@ board.on('ready', function () {
 
   this.repl.inject({
     machines: machines,
-    reset: reset
+    reset: reset,
+    start: start
   });
 });
 
