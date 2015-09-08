@@ -24,7 +24,7 @@ board.on('ready', function () {
 
     if (message.status === 'ping') { ping(); }
     else if (message.jobs) { handleJobs(message); }
-    else if (message.status === 'stop now') { stop(); }
+    else if (message.status === 'stop now') { reset(); }
   });
 
   button.on('down', function () {
@@ -45,7 +45,7 @@ function initMachines() {
   machines.forEach(function(machine) {
     machine.pins = machine.ports.reduce(function (acc, port) {
       var pin = new five.Relay({
-                        type: "NO",
+                        type: "NC",
                         pin: port
                     });
       acc[port] = pin
