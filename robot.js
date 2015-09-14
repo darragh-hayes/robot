@@ -24,7 +24,9 @@ board.on('ready', function () {
 
     if (message.status === 'ping') { ping(); }
     else if (message.jobs) { handleJobs(message); }
-    else if (message.status === 'stop now') { stop(); }
+    else if (message.status === 'stop now') { 
+      message.pump ? machines[message.pump].reset() : reset();
+    }
   });
 
   button.on('down', function () {
